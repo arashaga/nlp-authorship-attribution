@@ -47,20 +47,25 @@ The final prediction is based on a ranked list of candidate authors. The best au
 
 ## Corpus Design
 
-The planned corpus uses public-domain literary texts from Project Gutenberg. Text files should be organized by author with a structure like this:
+The project uses two corpus modes. The first mode is a small Project Gutenberg demo corpus from NLTK, which gives the pipeline a traditional authorship-attribution sanity check using public-domain literary authors. The second mode is the local LLM fiction corpus, which is the main experiment for the final project.
+
+The local corpus is organized by model label:
 
 ```text
 data/
-  corpus/
-    Jane_Austen/
-      pride_and_prejudice.txt
-      sense_and_sensibility.txt
-    Charles_Dickens/
-      great_expectations.txt
-      oliver_twist.txt
+  Claude/
+    The City That Forgot Its Own Name.txt
+    The Last Translator of Dreams.txt
+  GPT/
+    The Museum of Unlived Lives.txt
+    When the Ocean Started Answering.txt
 ```
 
-Each author should ideally have more than one work, or at least enough text to create multiple comparable chunks. The pipeline splits longer documents into sentence-respecting chunks of similar size, so that the system compares samples that are roughly equivalent in length. For testing, one or more chunks per author are held out as "unknown" samples. Because the true author of each held-out sample is still known to the researcher, the system can be evaluated with simple accuracy measures.
+For this experiment, I prompted Claude and GPT to generate long-form fiction using similar generic prompts, but with different titles and story premises. I then treated the model names, `Claude` and `GPT`, as author labels. The plan was not to build a general AI-text detector. Instead, the goal was to ask a narrower stylometric question: when two LLMs are asked to produce fiction without a strongly specified target style, do their generated texts show measurable differences in function-word habits, part-of-speech patterns, and lexical behavior?
+
+Each model has two generated fiction texts. The pipeline splits those texts into sentence-respecting chunks of similar size, trains a profile for each model label, and holds out one or more chunks as "unknown" samples. Because the true generating model is still known, the system can evaluate whether the held-out chunks are closer to the Claude profile or the GPT profile.
+
+This setup is exploratory. Different titles, prompts, genres, model versions, system messages, and sampling settings can all influence the resulting style. A stronger version of the experiment would use more generated texts per model, multiple prompts per genre, recorded model settings, and evaluation on entirely unseen prompts. Still, the local corpus is useful for testing whether a traditional, interpretable stylometry pipeline can detect model-specific tendencies in a small controlled sample.
 
 ## Project Structure
 
@@ -70,6 +75,13 @@ authorship_pipeline/
   attribution.py
   corpus.py
   features.py
+data/
+  Claude/
+    The City That Forgot Its Own Name.txt
+    The Last Translator of Dreams.txt
+  GPT/
+    The Museum of Unlived Lives.txt
+    When the Ocean Started Answering.txt
 authorship_stylometry_project.ipynb
 requirements.txt
 README.md
@@ -115,7 +127,7 @@ from authorship_pipeline import (
 
 ensure_nltk_resources()
 
-documents = load_local_corpus("data/corpus")
+documents = load_local_corpus("data")
 chunks = prepare_chunks(documents, chunk_size=1500, min_chunk_size=900)
 training_chunks, test_chunks = split_chunks_by_author(chunks, holdout_per_author=1)
 
