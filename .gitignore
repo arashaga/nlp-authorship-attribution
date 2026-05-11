@@ -30,6 +30,10 @@ dist/
 # Jupyter notebooks
 .ipynb_checkpoints/
 
+# Blog drafts and resources
+blog/
+blog_resources/
+
 # Type checker and linter caches
 .mypy_cache/
 .pyre/
